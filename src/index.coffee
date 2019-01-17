@@ -1,0 +1,3 @@
+BezierEditComponent = {}
+
+export {BezierEditComponent}
