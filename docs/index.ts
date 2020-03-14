@@ -1,4 +1,4 @@
-import {BezierComponent} from "../src"
+import {BezierEditComponent} from "../src"
 import h from 'react-hyperscript'
 import {render} from 'react-dom'
 
@@ -14,7 +14,7 @@ const UserInterface = (props)=>{
   const width = 800
   return h(SVGComponent, {width, height: 600}, [
     h('rect', {x: 50, y: 50, height: 500, width: width-100, fill: '#eeeeee'}),
-    h(BezierComponent)
+    h(BezierEditComponent)
   ])
 }
 
