@@ -12,11 +12,12 @@ const BezierComponent = (props)=>{
 
   let c2 = [...p2]
   c2[0] -= 200
+  c2[1] -= 50
 
   p.moveTo(...p1)
   p.bezierCurveTo(...c1,...c2,...p2)
 
-  h('path', {
+  return h('path', {
     d: p.toString(),
     stroke: "#888888",
     fill: 'none',

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "parcel docs/index.html"
+    "dev": "parcel docs/index.html"
   },
   "repository": {
     "type": "git",
