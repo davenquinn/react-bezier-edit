@@ -29,6 +29,7 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
+    "d3-array": "^2.4.0",
     "d3-path": "^1.0.7",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
