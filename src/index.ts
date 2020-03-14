@@ -1,6 +1,9 @@
-import h from 'react-hyperscript'
+import {hyperStyled} from '@macrostrat/hyper'
 import {path} from 'd3-path'
 import {pairs} from 'd3-array'
+import styles from './main.styl'
+
+const h = hyperStyled(styles)
 
 interface BezierControlPoint {
   x: number,
@@ -49,6 +52,22 @@ const BezierPath = (props: BezierComponentProps)=>{
   })
 }
 
+interface ControlPointProps {
+  point: BezierPoint
+}
+
+const BezierControlPoint = (props: ControlPointProps)=>{
+  const {point} = props
+  return h("circle.bezier-control-point", {cx: point.x, cy: point.y, r: 5})
+}
+
+const BezierPoints = (props: BezierComponentProps)=>{
+  const {points} = props
+  return h("g.points", points.map(point =>{
+    return h(BezierControlPoint, {point})
+  }))
+}
+
 const BezierEditComponent = (props)=>{
   const points = [
     {x: 100, y: 100, controlPoint: {x: 200, y: 0}},
@@ -56,7 +75,10 @@ const BezierEditComponent = (props)=>{
     {x: 500, y: 300, controlPoint: {x: 200, y: 0}}
   ]
 
-  return h(BezierPath, {points})
+  return h("g.bezier-edit", [
+    h(BezierPath, {points}),
+    h(BezierPoints, {points})
+  ])
 }
 
 export {BezierEditComponent}
