@@ -25,7 +25,8 @@
   },
   "devDependencies": {
     "coffeescript": "^2.3.2",
-    "stylus": "^0.54.5"
+    "stylus": "^0.54.5",
+    "typescript": "^3.8.3"
   },
   "dependencies": {
     "d3-path": "^1.0.7",
