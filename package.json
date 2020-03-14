@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "parcel build docs/index.html"
+    "watch": "parcel docs/index.html"
   },
   "repository": {
     "type": "git",
@@ -24,6 +24,13 @@
     "parcel-bundler": "^1.11.0"
   },
   "devDependencies": {
-    "coffeescript": "^2.3.2"
+    "coffeescript": "^2.3.2",
+    "stylus": "^0.54.5"
+  },
+  "dependencies": {
+    "d3-path": "^1.0.7",
+    "react": "^16.7.0",
+    "react-dom": "^16.7.0",
+    "react-hyperscript": "^3.2.0"
   }
 }
