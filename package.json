@@ -31,6 +31,9 @@
   },
   "dependencies": {
     "@macrostrat/hyper": "^1.2.2",
+    "@types/bezier-js": "0.0.8",
+    "@types/d3-array": "^2.0.0",
+    "bezier-js": "^2.5.1",
     "d3-array": "^2.4.0",
     "d3-path": "^1.0.7",
     "react": "^16.7.0",
