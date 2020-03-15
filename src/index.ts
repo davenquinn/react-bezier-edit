@@ -5,24 +5,6 @@ import styles from './main.styl'
 
 const h = hyperStyled(styles)
 
-interface Point {
-  x: number,
-  y: number
-}
-
-interface BezierControlPoint {
-  dx: number,
-  dy: number
-}
-
-interface BezierPoint extends Point {
-  controlPoint?: BezierControlPoint
-}
-
-interface BezierComponentProps {
-  points: BezierPoint[]
-}
-
 function negate(controlPoint: BezierControlPoint): BezierControlPoint {
   return {dx: -controlPoint.dx, dy: -controlPoint.dy}
 }
