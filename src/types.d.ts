@@ -20,3 +20,5 @@ type BezierVertexControls = SmoothControlPoint|InflectionControlPoint|null
 interface BezierPoint extends Point {
   controlPoint: BezierVertexControls
 }
+
+type BezierCurve = BezierPoint[]

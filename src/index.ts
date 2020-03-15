@@ -1,8 +1,10 @@
 import {hyperStyled} from '@macrostrat/hyper'
+import {useState} from 'react'
+import update, {Spec} from 'immutability-helper'
+import {DraggableCore, DraggableEventHandler} from 'react-draggable'
 import {path} from 'd3-path'
 import {pairs} from 'd3-array'
 import styles from './main.styl'
-import Bezier from 'bezier-js'
 
 const h = hyperStyled(styles)
 
@@ -19,9 +21,11 @@ function expandControlPoint(cp: BezierVertexControls): InflectionControlPoint {
   }
 }
 
-interface BezierComponentProps {
-  points: BezierPoint[]
+interface BezierProps {
+  points: BezierCurve
 }
+
+type PointsSpec = Spec<BezierPoint[]>
 
 function pixelShift(cp: ControlPoint|null): Point {
   if (cp == null) return {x: 0, y: 0}
@@ -32,7 +36,7 @@ function pixelShift(cp: ControlPoint|null): Point {
   }
 }
 
-const BezierPath = (props: BezierComponentProps)=>{
+const BezierPath = (props: BezierProps)=>{
   const {points} = props
 
   let p = path()
@@ -61,26 +65,12 @@ const BezierPath = (props: BezierComponentProps)=>{
   })
 }
 
-interface ControlPointProps {
-  point: BezierPoint,
-  isStartPoint: boolean,
-  isEndPoint: boolean
-}
-
 const BezierHandle = (props: {controlPoint: ControlPoint|null})=>{
   const {controlPoint: c1} = props
   if (c1?.length == null) return null
   return h("g.bezier-handle", {transform: `rotate(${c1.angle})`}, [
     h('line.bezier-control-arm', {x2: c1.length}),
     h('circle.bezier-control-point', {cx: c1.length, r: 3})
-  ])
-}
-
-const SmoothHandles = (props: {controlPoint: SmoothControlPoint})=>{
-  const {angle, length, length1} = props.controlPoint;
-  return h("g.bezier-smooth-handle", [
-    h(BezierHandle, {controlPoint: {angle, length}}),
-    h(BezierHandle, {controlPoint: {angle: -angle, length: length1}})
   ])
 }
 
@@ -93,13 +83,37 @@ const BezierHandles = (props: BezierHandlesProps)=>{
   )))
 }
 
-const BezierPoint = (props: ControlPointProps)=>{
-  const {point, isStartPoint, isEndPoint} = props
-  const {controlPoint} = point
+interface BezierPointProps {
+  point: BezierPoint,
+  isStartPoint: boolean,
+  isEndPoint: boolean,
+  updatePoint?(spec: Spec<BezierPoint>): void
+}
 
-  return h("g.bezier-node", {transform: `translate(${point.x} ${point.y})`}, [
+const BezierPoint = (props: BezierPointProps)=>{
+  const {point, updatePoint} = props
+  const {controlPoint} = point
+  const editable = updatePoint != null
+  const className = editable ? "editable" : null
+
+  const onDrag: DraggableEventHandler = (e, data)=>{
+    console.log(e,data)
+    const {x,y} = data
+    const spec: Spec<BezierPoint> = {x: {$set: x}, y: {$set: y}}
+    updatePoint?.(spec)
+  }
+
+  return h("g.bezier-node", {
+    className,
+    transform: `translate(${point.x} ${point.y})`
+  }, [
     h(BezierHandles, {controlPoint}),
-    h("circle.bezier-point", {r: 5})
+    h(DraggableCore, {
+      onDrag,
+      offsetParent: document.querySelector("svg")
+    }, (
+      h("circle.bezier-point", {r: 5})
+    ))
   ])
 }
 
@@ -108,25 +122,33 @@ BezierPoint.defaultProps = {
   isEndPoint: false
 }
 
-const BezierPoints = (props: BezierComponentProps)=>{
-  const {points} = props
+interface BezierPointsProps extends BezierProps {
+  updatePoints: (spec: PointsSpec)=>void
+}
+
+const BezierPoints = (props: BezierPointsProps)=>{
+  const {points, updatePoints} = props
   return h("g.points", points.map((point, index) =>{
+    const updatePoint = (spec: Spec<BezierPoint>)=>updatePoints({[index]: spec})
     const isStartPoint = index == 0;
     const isEndPoint = index == points.length-1
-    return h(BezierPoint, {point, isStartPoint, isEndPoint})
+    return h(BezierPoint, {point, isStartPoint, isEndPoint, updatePoint})
   }))
 }
 
 const BezierEditComponent = ()=>{
-  const points = [
-    {x: 100, y: 100, controlPoint: {angle: 0, length1: 200}},
+  const [points, setPoints] = useState<BezierCurve>([
+    {x: 100, y: 100, controlPoint: {angle: 0, length1: 200, length: null}},
     {x: 400, y: 400, controlPoint: {length: 200, angle: 0, length1: 200}},
-    {x: 500, y: 300, controlPoint: {length: 200, angle: 0}}
-  ]
+    {x: 500, y: 300, controlPoint: {length: 200, angle: 0, length1: null}}
+  ])
+  const updatePoints = (spec: Spec<BezierCurve>)=>{
+    setPoints(update<BezierCurve>(points, spec))
+  }
 
   return h("g.bezier-edit", [
     h(BezierPath, {points}),
-    h(BezierPoints, {points})
+    h(BezierPoints, {points, updatePoints})
   ])
 }
 
