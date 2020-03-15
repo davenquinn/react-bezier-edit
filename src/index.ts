@@ -5,14 +5,17 @@ import styles from './main.styl'
 
 const h = hyperStyled(styles)
 
-interface BezierControlPoint {
+interface Point {
   x: number,
   y: number
 }
 
-interface BezierPoint {
-  x: number,
-  y: number,
+interface BezierControlPoint {
+  dx: number,
+  dy: number
+}
+
+interface BezierPoint extends Point {
   controlPoint?: BezierControlPoint
 }
 
@@ -21,7 +24,7 @@ interface BezierComponentProps {
 }
 
 function negate(controlPoint: BezierControlPoint): BezierControlPoint {
-  return {x: -controlPoint.x, y: -controlPoint.y}
+  return {dx: -controlPoint.dx, dy: -controlPoint.dy}
 }
 
 const BezierPath = (props: BezierComponentProps)=>{
@@ -32,14 +35,14 @@ const BezierPath = (props: BezierComponentProps)=>{
 
   for (const [p1, p2] of pairs(points)) {
 
-    let c1 = p1.controlPoint ?? {x: 0, y: 0}
-    let c2 = negate(p2.controlPoint) ?? {x: 0, y: 0}
+    let c1 = p1.controlPoint ?? {dx: 0, dy: 0}
+    let c2 = negate(p2.controlPoint) ?? {dx: 0, dy: 0}
 
     p.bezierCurveTo(
-      p1.x+c1.x,
-      p1.y+c1.y,
-      p2.x+c2.x,
-      p2.y+c2.y,
+      p1.x+c1.dx,
+      p1.y+c1.dy,
+      p2.x+c2.dx,
+      p2.y+c2.dy,
       p2.x,
       p2.y)
   }
@@ -53,26 +56,69 @@ const BezierPath = (props: BezierComponentProps)=>{
 }
 
 interface ControlPointProps {
-  point: BezierPoint
+  point: BezierPoint,
+  isStartPoint: boolean,
+  isEndPoint: boolean
 }
 
-const BezierControlPoint = (props: ControlPointProps)=>{
-  const {point} = props
-  return h("circle.bezier-control-point", {cx: point.x, cy: point.y, r: 5})
+const leadingControl = function(pt: BezierPoint): Point|null {
+  if (pt.controlPoint == null) {
+    return null
+  }
+  const ctl = negate(pt.controlPoint)
+  return {x: pt.x+ctl.dx, y: pt.y+ctl.dy}
+}
+
+const trailingControl = function(pt: BezierPoint): Point|null {
+  if (pt.controlPoint == null) {
+    return null
+  }
+  const ctl = pt.controlPoint
+  return {x: pt.x+ctl.dx, y: pt.y+ctl.dy}
+}
+
+const BezierControlArm = (props)=>{
+  const {controlPoint: c1} = props
+  if (c1 == null) return null
+  return h("g", [
+    h('line.bezier-control-arm', {x1: 0, y1: 0, x2: c1.dx, y2: c1.dy}),
+    h('circle.bezier-control-point', {cx: c1.dx, cy: c1.dy, r: 3})
+  ])
+}
+
+const BezierPoint = (props: ControlPointProps)=>{
+  const {point, isStartPoint, isEndPoint} = props
+  const {controlPoint} = point
+
+  const c1 = isStartPoint ? null : negate(controlPoint ?? {dx: 0, dy: 0})
+  const c2 = isEndPoint ? null : controlPoint ?? {dx: 0, dy: 0}
+
+  return h("g.bezier-node", {transform: `translate(${point.x} ${point.y})`}, [
+    h.if(c1 != null)(BezierControlArm, {controlPoint: c1}),
+    h.if(c2 != null)(BezierControlArm, {controlPoint: c2}),
+    h("circle.bezier-point", {r: 5})
+  ])
+}
+
+BezierPoint.defaultProps = {
+  isStartPoint: false,
+  isEndPoint: false
 }
 
 const BezierPoints = (props: BezierComponentProps)=>{
   const {points} = props
-  return h("g.points", points.map(point =>{
-    return h(BezierControlPoint, {point})
+  return h("g.points", points.map((point, index) =>{
+    const isStartPoint = index == 0;
+    const isEndPoint = index == points.length-1
+    return h(BezierPoint, {point, isStartPoint, isEndPoint})
   }))
 }
 
 const BezierEditComponent = (props)=>{
   const points = [
-    {x: 100, y: 100, controlPoint: {x: 200, y: 0}},
-    {x: 400, y: 400, controlPoint: {x: 200, y: 0}},
-    {x: 500, y: 300, controlPoint: {x: 200, y: 0}}
+    {x: 100, y: 100, controlPoint: {dx: 200, dy: 0}},
+    {x: 400, y: 400, controlPoint: {dx: 200, dy: 0}},
+    {x: 500, y: 300, controlPoint: {dx: 200, dy: 0}}
   ]
 
   return h("g.bezier-edit", [
