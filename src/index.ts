@@ -1,5 +1,5 @@
 import {hyperStyled} from '@macrostrat/hyper'
-import {useState} from 'react'
+import {useState, SVGProps} from 'react'
 import update, {Spec} from 'immutability-helper'
 import {DraggableCore, DraggableEventHandler} from 'react-draggable'
 import {path} from 'd3-path'
@@ -65,22 +65,71 @@ const BezierPath = (props: BezierProps)=>{
   })
 }
 
-const BezierHandle = (props: {controlPoint: ControlPoint|null})=>{
-  const {controlPoint: c1} = props
+const DraggableCircle = (props)=>{
+  const {onDrag, ...rest} = props
+  return h(DraggableCore, {
+    onDrag,
+    offsetParent: document.querySelector("svg")
+  }, (
+    h("circle.draggable", {...rest})
+  ))
+}
+
+interface BezierHandleProps {
+  controlPoint: ControlPoint|null,
+  onDrag: DraggableEventHandler
+}
+
+const BezierHandle = (props: BezierHandleProps)=>{
+  const {controlPoint: c1, onDrag} = props
+
   if (c1?.length == null) return null
   return h("g.bezier-handle", {transform: `rotate(${c1.angle})`}, [
     h('line.bezier-control-arm', {x2: c1.length}),
-    h('circle.bezier-control-point', {cx: c1.length, r: 3})
+    h(DraggableCircle, {
+      className: '.bezier-control-point',
+      onDrag,
+      cx: c1.length,
+      r: 3
+    })
   ])
 }
 
-type BezierHandlesProps = {controlPoint: BezierVertexControls}
+type BezierHandlesProps = {
+  point: BezierPoint,
+  updateControlPoint(spec: Spec<BezierVertexControls>): void
+}
 
 const BezierHandles = (props: BezierHandlesProps)=>{
-  const controlPoints = expandControlPoint(props.controlPoint)
-  return h("g.bezier-handles", controlPoints.map(d => h(
-    BezierHandle, {controlPoint: d}
-  )))
+  const {updateControlPoint, point} = props
+  const {controlPoint, x, y} = point
+  const updateBezierHandle = (index: number): DraggableEventHandler=>{
+    return (event, data)=>{
+      const dx = data.x-x
+      const dy = data.y-y
+      const startLength = Math.hypot(data.lastX-x,data.lastY-y)
+      const length = Math.hypot(dx,dy)
+      const angle = Math.atan2(dy,dx)*180/Math.PI-180
+      if (Array.isArray(controlPoint)) {
+        // disconnected endpoints
+      }
+      let spec: Spec<BezierVertexControls> = {angle: {$set: angle}}
+      if (index == 1) {
+        spec['length1'] = {$set: length}
+        spec['angle'] = {$set: angle+180}
+      } else {
+        spec['length'] = {$set: length}
+      }
+      updateControlPoint(spec)
+    }
+  }
+  const controlPoints = expandControlPoint(point.controlPoint)
+  return h("g.bezier-handles", controlPoints.map((d,i)=> {
+    return h(BezierHandle, {
+      controlPoint: d,
+      onDrag: updateBezierHandle(i)
+    })
+  }))
 }
 
 interface BezierPointProps {
@@ -97,23 +146,19 @@ const BezierPoint = (props: BezierPointProps)=>{
   const className = editable ? "editable" : null
 
   const onDrag: DraggableEventHandler = (e, data)=>{
-    console.log(e,data)
     const {x,y} = data
     const spec: Spec<BezierPoint> = {x: {$set: x}, y: {$set: y}}
     updatePoint?.(spec)
   }
 
+  const updateControlPoint = (spec: Spec<BezierVertexControls>)=> updatePoint?.({controlPoint: spec})
+
   return h("g.bezier-node", {
     className,
     transform: `translate(${point.x} ${point.y})`
   }, [
-    h(BezierHandles, {controlPoint}),
-    h(DraggableCore, {
-      onDrag,
-      offsetParent: document.querySelector("svg")
-    }, (
-      h("circle.bezier-point", {r: 5})
-    ))
+    h(BezierHandles, {point, updateControlPoint}),
+    h(DraggableCircle, {onDrag, className: 'bezier-point', r: 5})
   ])
 }
 
