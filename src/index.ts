@@ -107,11 +107,10 @@ const BezierHandles = (props: BezierHandlesProps)=>{
     return (event, data)=>{
       const dx = data.x-x
       const dy = data.y-y
-      const startLength = Math.hypot(data.lastX-x,data.lastY-y)
       const length = Math.hypot(dx,dy)
       const angle = Math.atan2(dy,dx)*180/Math.PI-180
       if (Array.isArray(controlPoint)) {
-        // disconnected endpoints
+        // disconnected endpoints not handled yet
       }
       let spec: Spec<BezierVertexControls> = {angle: {$set: angle}}
       if (index == 1) {
@@ -132,6 +131,30 @@ const BezierHandles = (props: BezierHandlesProps)=>{
   }))
 }
 
+const rotate = (deg: number)=>{
+  return `rotate(${deg})`
+}
+
+enum Polarity {
+  BEFORE = -1,
+  AFTER = 1
+}
+
+interface EndpointControlProps {
+  polarity: Polarity,
+  angle: number
+}
+
+const BezierEndpointControl = (props: EndpointControlProps)=>{
+  const {angle, polarity} = props
+  const cx = 20*polarity
+  const onClick = ()=>{}
+
+  return h("g.endpoint-control", {transform: rotate(angle)}, [
+    h("circle.enter-edit-mode", {cx, r: 5, onClick})
+  ])
+}
+
 interface BezierPointProps {
   point: BezierPoint,
   isStartPoint: boolean,
@@ -139,9 +162,19 @@ interface BezierPointProps {
   updatePoint?(spec: Spec<BezierPoint>): void
 }
 
+function controlForPolarity(point: BezierPoint, polarity: Polarity): ControlPoint|null {
+  const ix = polarity < 1 ? 0 : 1
+  return expandControlPoint(point.controlPoint)[ix]
+}
+
+const getAngle = (point: BezierPoint, polarity: Polarity):number =>{
+  let c = controlForPolarity(point, polarity)
+  if (c == null) c = controlForPolarity(point, -polarity)
+  return c?.angle ?? 0
+}
+
 const BezierPoint = (props: BezierPointProps)=>{
-  const {point, updatePoint} = props
-  const {controlPoint} = point
+  const {point, updatePoint, isStartPoint, isEndPoint} = props
   const editable = updatePoint != null
   const className = editable ? "editable" : null
 
@@ -151,14 +184,22 @@ const BezierPoint = (props: BezierPointProps)=>{
     updatePoint?.(spec)
   }
 
-  const updateControlPoint = (spec: Spec<BezierVertexControls>)=> updatePoint?.({controlPoint: spec})
+  const updateControlPoint = (spec: Spec<BezierVertexControls>)=>{
+    updatePoint?.({controlPoint: spec})
+  }
+  const hasEnter = isStartPoint || isEndPoint
+
+  let polarity = Polarity.BEFORE
+  if (isEndPoint) polarity = Polarity.AFTER
+  const angle = getAngle(point, polarity)
 
   return h("g.bezier-node", {
     className,
     transform: `translate(${point.x} ${point.y})`
   }, [
+    h(DraggableCircle, {onDrag, className: 'bezier-point', r: 5}),
     h(BezierHandles, {point, updateControlPoint}),
-    h(DraggableCircle, {onDrag, className: 'bezier-point', r: 5})
+    h.if(hasEnter)(BezierEndpointControl, {angle, polarity})
   ])
 }
 
