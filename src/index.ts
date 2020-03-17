@@ -4,7 +4,10 @@ import update, {Spec} from 'immutability-helper'
 import {DraggableCore, DraggableEventHandler} from 'react-draggable'
 import {path} from 'd3-path'
 import {pairs} from 'd3-array'
-import {BezierEditorProvider, useCurve, useDispatch} from './state-manager'
+import {
+  BezierEditorProvider,
+  Polarity,
+  useCurve, useDispatch} from './state-manager'
 import styles from './main.styl'
 
 const h = hyperStyled(styles)
@@ -22,10 +25,6 @@ function expandControlPoint(cp: BezierVertexControls): InflectionControlPoint {
   }
 }
 
-interface BezierProps {
-  points: BezierCurve
-}
-
 type PointsSpec = Spec<BezierPoint[]>
 
 function pixelShift(cp: ControlPoint|null): Point {
@@ -37,8 +36,8 @@ function pixelShift(cp: ControlPoint|null): Point {
   }
 }
 
-const BezierPath = (props: BezierProps)=>{
-  const {points} = props
+const BezierPath = ()=>{
+  const points = useCurve()
 
   let p = path()
   p.moveTo(points[0].x, points[0].y)
@@ -98,47 +97,31 @@ const BezierHandle = (props: BezierHandleProps)=>{
 
 type BezierHandlesProps = {
   point: BezierPoint,
-  updateControlPoint(spec: Spec<BezierVertexControls>): void
+  index: number
 }
 
 const BezierHandles = (props: BezierHandlesProps)=>{
-  const {updateControlPoint, point} = props
-  const {controlPoint, x, y} = point
-  const updateBezierHandle = (index: number): DraggableEventHandler=>{
-    return (event, data)=>{
-      const dx = data.x-x
-      const dy = data.y-y
-      const length = Math.hypot(dx,dy)
-      const angle = Math.atan2(dy,dx)*180/Math.PI-180
-      if (Array.isArray(controlPoint)) {
-        // disconnected endpoints not handled yet
-      }
-      let spec: Spec<BezierVertexControls> = {angle: {$set: angle}}
-      if (index == 1) {
-        spec['length1'] = {$set: length}
-        spec['angle'] = {$set: angle+180}
-      } else {
-        spec['length'] = {$set: length}
-      }
-      updateControlPoint(spec)
-    }
-  }
+  const {index, point} = props
+  const dispatch = useDispatch()
+
   const controlPoints = expandControlPoint(point.controlPoint)
   return h("g.bezier-handles", controlPoints.map((d,i)=> {
+
+    const polarity = i < 1 ? Polarity.BEFORE : Polarity.AFTER
+
+    const onDrag: DraggableEventHandler = (e, data)=>{
+      dispatch({type: 'drag-handle', index, data, polarity})
+    }
+
     return h(BezierHandle, {
       controlPoint: d,
-      onDrag: updateBezierHandle(i)
+      onDrag
     })
   }))
 }
 
 const rotate = (deg: number)=>{
   return `rotate(${deg})`
-}
-
-enum Polarity {
-  BEFORE = -1,
-  AFTER = 1
 }
 
 interface EndpointControlProps {
@@ -158,8 +141,7 @@ const BezierEndpointControl = (props: EndpointControlProps)=>{
 
 interface BezierPointProps {
   point: BezierPoint,
-  index: number,
-  updatePoint?(spec: Spec<BezierPoint>): void
+  index: number
 }
 
 function controlForPolarity(point: BezierPoint, polarity: Polarity): ControlPoint|null {
@@ -174,24 +156,21 @@ const getAngle = (point: BezierPoint, polarity: Polarity):number =>{
 }
 
 const BezierPoint = (props: BezierPointProps)=>{
-  const {point, updatePoint, index} = props
-  const editable = updatePoint != null
+  const {index} = props
+  const editable = true
   const className = editable ? "editable" : null
 
   const points = useCurve()
+  const point = points[index]
+  const dispatch = useDispatch()
 
   const isStartPoint = index == 0;
   const isEndPoint = index == points.length-1
 
   const onDrag: DraggableEventHandler = (e, data)=>{
-    const {x,y} = data
-    const spec: Spec<BezierPoint> = {x: {$set: x}, y: {$set: y}}
-    updatePoint?.(spec)
+    dispatch({type: 'drag-vertex', data, index})
   }
 
-  const updateControlPoint = (spec: Spec<BezierVertexControls>)=>{
-    updatePoint?.({controlPoint: spec})
-  }
   const hasEnter = isStartPoint || isEndPoint
 
   let polarity = Polarity.BEFORE
@@ -203,7 +182,7 @@ const BezierPoint = (props: BezierPointProps)=>{
     transform: `translate(${point.x} ${point.y})`
   }, [
     h(DraggableCircle, {onDrag, className: 'bezier-point', r: 5}),
-    h(BezierHandles, {point, updateControlPoint}),
+    h(BezierHandles, {point, index}),
     h.if(hasEnter)(BezierEndpointControl, {angle, polarity})
   ])
 }
@@ -213,12 +192,15 @@ BezierPoint.defaultProps = {
   isEndPoint: false
 }
 
+interface BezierProps {}
+
 interface BezierPointsProps extends BezierProps {
   updatePoints: (spec: PointsSpec)=>void
 }
 
 const BezierPoints = (props: BezierPointsProps)=>{
-  const {points, updatePoints} = props
+  const points = useCurve()
+  const {updatePoints} = props
   return h("g.points", points.map((point, index) =>{
     const updatePoint = (spec: Spec<BezierPoint>)=>updatePoints({[index]: spec})
     return h(BezierPoint, {point, index, updatePoint})
@@ -227,10 +209,11 @@ const BezierPoints = (props: BezierPointsProps)=>{
 
 
 const EditableBezier = (props: BezierPointsProps)=>{
-  const {points, updatePoints} = props
+  const points = useCurve()
+  const {updatePoints} = props
   return h("g.editable-bezier", [
     h(BezierPath, {points}),
-    h.if(updatePoints != null)(BezierPoints, {points, updatePoints})
+    h(BezierPoints, {updatePoints})
   ])
 }
 
@@ -245,7 +228,7 @@ const BezierEditComponent = ()=>{
     setPoints(update<BezierCurve>(points, spec))
   }
   return h(BezierEditorProvider, {initialData}, [
-    h(EditableBezier, {points, updatePoints})
+    h(EditableBezier, {updatePoints})
   ])
 }
 
