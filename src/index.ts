@@ -1,5 +1,5 @@
 import {hyperStyled} from '@macrostrat/hyper'
-import {useState, SVGProps} from 'react'
+import {useState} from 'react'
 import update, {Spec} from 'immutability-helper'
 import {DraggableCore, DraggableEventHandler} from 'react-draggable'
 import {path} from 'd3-path'
@@ -192,29 +192,11 @@ BezierPoint.defaultProps = {
   isEndPoint: false
 }
 
-interface BezierProps {}
-
-interface BezierPointsProps extends BezierProps {
-  updatePoints: (spec: PointsSpec)=>void
-}
-
-const BezierPoints = (props: BezierPointsProps)=>{
+const BezierPoints = ()=>{
   const points = useCurve()
-  const {updatePoints} = props
   return h("g.points", points.map((point, index) =>{
-    const updatePoint = (spec: Spec<BezierPoint>)=>updatePoints({[index]: spec})
-    return h(BezierPoint, {point, index, updatePoint})
+    return h(BezierPoint, {point, index})
   }))
-}
-
-
-const EditableBezier = (props: BezierPointsProps)=>{
-  const points = useCurve()
-  const {updatePoints} = props
-  return h("g.editable-bezier", [
-    h(BezierPath, {points}),
-    h(BezierPoints, {updatePoints})
-  ])
 }
 
 const BezierEditComponent = ()=>{
@@ -223,12 +205,11 @@ const BezierEditComponent = ()=>{
     {x: 400, y: 400, controlPoint: {length: 200, angle: 0, length1: 200}},
     {x: 500, y: 300, controlPoint: {length: 200, angle: 0, length1: null}}
   ]
-  const [points, setPoints] = useState<BezierCurve>(initialData)
-  const updatePoints = (spec: Spec<BezierCurve>)=>{
-    setPoints(update<BezierCurve>(points, spec))
-  }
   return h(BezierEditorProvider, {initialData}, [
-    h(EditableBezier, {updatePoints})
+    h("g.editable-bezier", [
+      h(BezierPath),
+      h(BezierPoints)
+    ])
   ])
 }
 
