@@ -4,7 +4,7 @@ import update, {Spec} from 'immutability-helper'
 import {DraggableCore, DraggableEventHandler} from 'react-draggable'
 import {path} from 'd3-path'
 import {pairs} from 'd3-array'
-import {BezierEditorProvider} from './state-manager'
+import {BezierEditorProvider, useCurve, useDispatch} from './state-manager'
 import styles from './main.styl'
 
 const h = hyperStyled(styles)
@@ -158,8 +158,7 @@ const BezierEndpointControl = (props: EndpointControlProps)=>{
 
 interface BezierPointProps {
   point: BezierPoint,
-  isStartPoint: boolean,
-  isEndPoint: boolean,
+  index: number,
   updatePoint?(spec: Spec<BezierPoint>): void
 }
 
@@ -175,9 +174,14 @@ const getAngle = (point: BezierPoint, polarity: Polarity):number =>{
 }
 
 const BezierPoint = (props: BezierPointProps)=>{
-  const {point, updatePoint, isStartPoint, isEndPoint} = props
+  const {point, updatePoint, index} = props
   const editable = updatePoint != null
   const className = editable ? "editable" : null
+
+  const points = useCurve()
+
+  const isStartPoint = index == 0;
+  const isEndPoint = index == points.length-1
 
   const onDrag: DraggableEventHandler = (e, data)=>{
     const {x,y} = data
@@ -217,9 +221,7 @@ const BezierPoints = (props: BezierPointsProps)=>{
   const {points, updatePoints} = props
   return h("g.points", points.map((point, index) =>{
     const updatePoint = (spec: Spec<BezierPoint>)=>updatePoints({[index]: spec})
-    const isStartPoint = index == 0;
-    const isEndPoint = index == points.length-1
-    return h(BezierPoint, {point, isStartPoint, isEndPoint, updatePoint})
+    return h(BezierPoint, {point, index, updatePoint})
   }))
 }
 
