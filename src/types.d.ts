@@ -21,4 +21,14 @@ interface BezierPoint extends Point {
   controlPoint: BezierVertexControls
 }
 
-type BezierCurve = BezierPoint[]
+interface BezierCurve {
+  points: BezierPoint[]
+}
+
+declare enum EditMode {
+  EXTEND = 'extend'
+}
+
+interface EditableBezierCurve extends BezierCurve {
+  editMode: EditMode|null
+}

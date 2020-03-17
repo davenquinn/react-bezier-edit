@@ -4,12 +4,10 @@ import {
   pixelShift,
   expandControlPoint
 } from './helpers'
-import {
-  useCurve
-} from './state-manager'
+import {usePoints} from './state-manager'
 
 const usePathGenerator = ()=>{
-  const points = useCurve()
+  const points = usePoints()
 
   let p = path()
   p.moveTo(points[0].x, points[0].y)
@@ -18,7 +16,6 @@ const usePathGenerator = ()=>{
 
     const c1 = pixelShift(expandControlPoint(p1.controlPoint)[1])
     const c2 = pixelShift(expandControlPoint(p2.controlPoint)[0])
-
 
     p.bezierCurveTo(
       p1.x+c1.x,

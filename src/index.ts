@@ -2,7 +2,7 @@ import {hyperStyled} from '@macrostrat/hyper'
 import {DraggableCore, DraggableEventHandler} from 'react-draggable'
 import {
   BezierEditorProvider,
-  useCurve,
+  usePoints,
   useDispatch
 } from './state-manager'
 import {usePathGenerator} from './path-data'
@@ -16,7 +16,6 @@ function rotate(deg: number) {
 function translate(point: Point) {
   return `translate(${point.x} ${point.y})`
 }
-
 
 const h = hyperStyled(styles)
 
@@ -113,7 +112,7 @@ const BezierPoint = (props: BezierPointProps)=>{
   const editable = true
   const className = editable ? "editable" : null
 
-  const points = useCurve()
+  const points = usePoints()
   const point = points[index]
   const dispatch = useDispatch()
 
@@ -146,19 +145,17 @@ BezierPoint.defaultProps = {
 }
 
 const BezierPoints = ()=>{
-  const points = useCurve()
-  return h("g.points", points.map((point, index) =>{
-    return h(BezierPoint, {point, index})
-  }))
+  const points = usePoints()
+  return h("g.points", points.map((point, index)=>h(BezierPoint, {point, index})))
 }
 
 const BezierEditComponent = ()=>{
-  const initialData = [
+  const initialPoints = [
     {x: 100, y: 100, controlPoint: {angle: 0, length1: 200, length: null}},
     {x: 400, y: 400, controlPoint: {length: 200, angle: 0, length1: 200}},
     {x: 500, y: 300, controlPoint: {length: 200, angle: 0, length1: null}}
   ]
-  return h(BezierEditorProvider, {initialData}, [
+  return h(BezierEditorProvider, {initialPoints}, [
     h("g.editable-bezier", [
       h(BezierPath),
       h(BezierPoints)
