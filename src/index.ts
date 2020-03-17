@@ -4,6 +4,7 @@ import update, {Spec} from 'immutability-helper'
 import {DraggableCore, DraggableEventHandler} from 'react-draggable'
 import {path} from 'd3-path'
 import {pairs} from 'd3-array'
+import {BezierEditorProvider} from './state-manager'
 import styles from './main.styl'
 
 const h = hyperStyled(styles)
@@ -232,15 +233,18 @@ const EditableBezier = (props: BezierPointsProps)=>{
 }
 
 const BezierEditComponent = ()=>{
-  const [points, setPoints] = useState<BezierCurve>([
+  const initialData = [
     {x: 100, y: 100, controlPoint: {angle: 0, length1: 200, length: null}},
     {x: 400, y: 400, controlPoint: {length: 200, angle: 0, length1: 200}},
     {x: 500, y: 300, controlPoint: {length: 200, angle: 0, length1: null}}
-  ])
+  ]
+  const [points, setPoints] = useState<BezierCurve>(initialData)
   const updatePoints = (spec: Spec<BezierCurve>)=>{
     setPoints(update<BezierCurve>(points, spec))
   }
-  return h(EditableBezier, {points, updatePoints})
+  return h(BezierEditorProvider, {initialData}, [
+    h(EditableBezier, {points, updatePoints})
+  ])
 }
 
 export {BezierEditComponent}
