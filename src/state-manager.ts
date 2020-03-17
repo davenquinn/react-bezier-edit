@@ -2,11 +2,7 @@ import h from '@macrostrat/hyper'
 import {useReducer, useContext, createContext} from 'react'
 import update, {Spec} from 'immutability-helper'
 import {DraggableData} from 'react-draggable'
-
-enum Polarity {
-  BEFORE = -1,
-  AFTER = 1
-}
+import {Polarity, getAngle} from './helpers'
 
 interface DragAction {
   index: number,
@@ -44,7 +40,11 @@ function updateControlPoint(curve: BezierCurve, action: DragBezierHandle) {
   const dx = x-point.x
   const dy = y-point.y
   const length = Math.hypot(dx,dy)
-  const angle = Math.atan2(dy,dx)*180/Math.PI-180
+  // Don't change angle if control arm is too short
+  let angle = getAngle(point, action.polarity)
+  if (length > 5) {
+    angle = Math.atan2(dy,dx)*180/Math.PI-180
+  }
   if (Array.isArray(point.controlPoint)) {
     // disconnected endpoints not handled yet
   }

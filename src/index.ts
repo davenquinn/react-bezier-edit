@@ -1,31 +1,16 @@
 import {hyperStyled} from '@macrostrat/hyper'
-import {useState} from 'react'
-import update, {Spec} from 'immutability-helper'
 import {DraggableCore, DraggableEventHandler} from 'react-draggable'
 import {path} from 'd3-path'
 import {pairs} from 'd3-array'
 import {
   BezierEditorProvider,
-  Polarity,
-  useCurve, useDispatch} from './state-manager'
+  useCurve,
+  useDispatch
+} from './state-manager'
+import {expandControlPoint, Polarity, getAngle} from './helpers'
 import styles from './main.styl'
 
 const h = hyperStyled(styles)
-
-function expandControlPoint(cp: BezierVertexControls): InflectionControlPoint {
-  if (cp == null) return [null, null];
-  if (Array.isArray(cp)) {
-    return cp
-  } else {
-    const {length, length1, angle} = cp
-    return [
-      length == null ? null : {length: -length, angle},
-      length1 == null ? null : {length: length1, angle}
-    ]
-  }
-}
-
-type PointsSpec = Spec<BezierPoint[]>
 
 function pixelShift(cp: ControlPoint|null): Point {
   if (cp == null) return {x: 0, y: 0}
@@ -142,17 +127,6 @@ const BezierEndpointControl = (props: EndpointControlProps)=>{
 interface BezierPointProps {
   point: BezierPoint,
   index: number
-}
-
-function controlForPolarity(point: BezierPoint, polarity: Polarity): ControlPoint|null {
-  const ix = polarity < 1 ? 0 : 1
-  return expandControlPoint(point.controlPoint)[ix]
-}
-
-const getAngle = (point: BezierPoint, polarity: Polarity):number =>{
-  let c = controlForPolarity(point, polarity)
-  if (c == null) c = controlForPolarity(point, -polarity)
-  return c?.angle ?? 0
 }
 
 const BezierPoint = (props: BezierPointProps)=>{
