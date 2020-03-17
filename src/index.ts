@@ -222,6 +222,15 @@ const BezierPoints = (props: BezierPointsProps)=>{
   }))
 }
 
+
+const EditableBezier = (props: BezierPointsProps)=>{
+  const {points, updatePoints} = props
+  return h("g.editable-bezier", [
+    h(BezierPath, {points}),
+    h.if(updatePoints != null)(BezierPoints, {points, updatePoints})
+  ])
+}
+
 const BezierEditComponent = ()=>{
   const [points, setPoints] = useState<BezierCurve>([
     {x: 100, y: 100, controlPoint: {angle: 0, length1: 200, length: null}},
@@ -231,11 +240,7 @@ const BezierEditComponent = ()=>{
   const updatePoints = (spec: Spec<BezierCurve>)=>{
     setPoints(update<BezierCurve>(points, spec))
   }
-
-  return h("g.bezier-edit", [
-    h(BezierPath, {points}),
-    h(BezierPoints, {points, updatePoints})
-  ])
+  return h(EditableBezier, {points, updatePoints})
 }
 
 export {BezierEditComponent}
