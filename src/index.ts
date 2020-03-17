@@ -1,46 +1,27 @@
 import {hyperStyled} from '@macrostrat/hyper'
 import {DraggableCore, DraggableEventHandler} from 'react-draggable'
-import {path} from 'd3-path'
-import {pairs} from 'd3-array'
 import {
   BezierEditorProvider,
   useCurve,
   useDispatch
 } from './state-manager'
+import {usePathGenerator} from './path-data'
 import {expandControlPoint, Polarity, getAngle} from './helpers'
 import styles from './main.styl'
 
-const h = hyperStyled(styles)
-
-function pixelShift(cp: ControlPoint|null): Point {
-  if (cp == null) return {x: 0, y: 0}
-  const ra = cp.angle * Math.PI/180
-  return {
-    x: Math.cos(ra)*cp.length,
-    y: Math.sin(ra)*cp.length
-  }
+function rotate(deg: number) {
+  return `rotate(${deg})`
 }
 
+function translate(point: Point) {
+  return `translate(${point.x} ${point.y})`
+}
+
+
+const h = hyperStyled(styles)
+
 const BezierPath = ()=>{
-  const points = useCurve()
-
-  let p = path()
-  p.moveTo(points[0].x, points[0].y)
-
-  for (const [p1, p2] of pairs(points)) {
-
-    const c1 = pixelShift(expandControlPoint(p1.controlPoint)[1])
-    const c2 = pixelShift(expandControlPoint(p2.controlPoint)[0])
-
-
-    p.bezierCurveTo(
-      p1.x+c1.x,
-      p1.y+c1.y,
-      p2.x+c2.x,
-      p2.y+c2.y,
-      p2.x,
-      p2.y)
-  }
+  const p = usePathGenerator()
 
   return h('path', {
     d: p.toString(),
@@ -69,7 +50,7 @@ const BezierHandle = (props: BezierHandleProps)=>{
   const {controlPoint: c1, onDrag} = props
 
   if (c1?.length == null) return null
-  return h("g.bezier-handle", {transform: `rotate(${c1.angle})`}, [
+  return h("g.bezier-handle", {transform: rotate(c1.angle)}, [
     h('line.bezier-control-arm', {x2: c1.length}),
     h(DraggableCircle, {
       className: '.bezier-control-point',
@@ -105,10 +86,6 @@ const BezierHandles = (props: BezierHandlesProps)=>{
   }))
 }
 
-const rotate = (deg: number)=>{
-  return `rotate(${deg})`
-}
-
 interface EndpointControlProps {
   polarity: Polarity,
   angle: number
@@ -119,7 +96,9 @@ const BezierEndpointControl = (props: EndpointControlProps)=>{
   const cx = 20*polarity
   const onClick = ()=>{}
 
-  return h("g.endpoint-control", {transform: rotate(angle)}, [
+  const transform = rotate(angle)
+
+  return h("g.endpoint-control", {transform}, [
     h("circle.enter-edit-mode", {cx, r: 5, onClick})
   ])
 }
@@ -153,7 +132,7 @@ const BezierPoint = (props: BezierPointProps)=>{
 
   return h("g.bezier-node", {
     className,
-    transform: `translate(${point.x} ${point.y})`
+    transform: translate(point)
   }, [
     h(DraggableCircle, {onDrag, className: 'bezier-point', r: 5}),
     h(BezierHandles, {point, index}),

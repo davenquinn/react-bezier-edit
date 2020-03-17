@@ -28,4 +28,13 @@ const getAngle = (point: BezierPoint, polarity: Polarity):number =>{
   return c?.angle ?? 0
 }
 
-export {Polarity, expandControlPoint, getAngle}
+function pixelShift(cp: ControlPoint|null): Point {
+  if (cp == null) return {x: 0, y: 0}
+  const ra = cp.angle * Math.PI/180
+  return {
+    x: Math.cos(ra)*cp.length,
+    y: Math.sin(ra)*cp.length
+  }
+}
+
+export {Polarity, expandControlPoint, getAngle, pixelShift}
