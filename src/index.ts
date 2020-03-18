@@ -118,6 +118,7 @@ const BezierPoints = ()=>{
 const LayerBackground = (props)=>{
   const dispatch = useDispatch()
   const onMouseMove = (event: React.MouseEvent)=>{
+    console.log(event.clientX, event.clentY)
     dispatch({type: "layer-move", x: event.clientX, y: event.clientY})
   }
   return h("rect.layer-background", {width: 1000, height: 600, onMouseMove})

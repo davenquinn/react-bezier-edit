@@ -36,9 +36,16 @@ const ExtendedPath = (props: {point: BezierPoint, angle: number})=>{
 
   let length = point.controlPoint?.length ?? point.controlPoint?.length1 ?? 0
   const controlPoint = {length, angle, length1: null}
-  const p1: BezierPoint = {...point, controlPoint}
-  const p2 = {...proposedVertex, controlPoint: null}
+  const p1: BezierPoint = {x:0, y: 0, controlPoint}
+  const p2 = {
+    x: proposedVertex.x-point.x,
+    // Weird extra factor
+    y: proposedVertex.y-point.y-60,
+    controlPoint: null
+  }
   const pathData = [p1,p2]
+  console.log(pathData)
+
   const p = generatePath(pathData)
   console.log(p.toString())
 
@@ -66,9 +73,11 @@ const BezierExtensionControl = (props: ExtProps)=>{
   const polarity = isStart ? Polarity.BEFORE : Polarity.AFTER
   const angle = getAngle(point, polarity)
 
+  const activeExtendMode = editMode?.polarity == polarity
+
   return h([
     h.if(!inExtendMode)(ExtendPlaceholder, {angle, polarity})
-    h.if(inExtendMode)(ExtendedPath, {point, angle})
+    h.if(inExtendMode && activeExtendMode)(ExtendedPath, {point, angle})
   ])
 }
 
