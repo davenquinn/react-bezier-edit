@@ -37,4 +37,13 @@ function pixelShift(cp: ControlPoint|null): Point {
   }
 }
 
-export {Polarity, expandControlPoint, getAngle, pixelShift}
+// Transforms
+function rotate(deg: number) {
+  return `rotate(${deg})`
+}
+
+function translate(point: Point) {
+  return `translate(${point.x} ${point.y})`
+}
+
+export {Polarity, expandControlPoint, getAngle, pixelShift, rotate, translate}

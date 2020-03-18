@@ -6,16 +6,9 @@ import {
   useDispatch
 } from './state-manager'
 import {usePathGenerator} from './path-data'
-import {expandControlPoint, Polarity, getAngle} from './helpers'
+import {expandControlPoint, Polarity, rotate, translate} from './helpers'
+import {BezierExtensionControl} from './components/extend'
 import styles from './main.styl'
-
-function rotate(deg: number) {
-  return `rotate(${deg})`
-}
-
-function translate(point: Point) {
-  return `translate(${point.x} ${point.y})`
-}
 
 const h = hyperStyled(styles)
 
@@ -85,31 +78,10 @@ const BezierHandles = (props: BezierHandlesProps)=>{
   }))
 }
 
-interface EndpointControlProps {
-  polarity: Polarity,
-  angle: number
-}
-
-const BezierEndpointControl = (props: EndpointControlProps)=>{
-  const {angle, polarity} = props
-  const cx = 20*polarity
-  const dispatch = useDispatch()
-  const onClick = ()=>{
-    dispatch({type: 'enter-extend-mode', polarity})
-  }
-
-  const transform = rotate(angle)
-
-  return h("g.endpoint-control", {transform}, [
-    h("circle.enter-edit-mode", {cx, r: 5, onClick})
-  ])
-}
-
 interface BezierPointProps {
   point: BezierPoint,
   index: number
 }
-
 const BezierPoint = (props: BezierPointProps)=>{
   const {index} = props
   const editable = true
@@ -119,18 +91,9 @@ const BezierPoint = (props: BezierPointProps)=>{
   const point = points[index]
   const dispatch = useDispatch()
 
-  const isStartPoint = index == 0;
-  const isEndPoint = index == points.length-1
-
   const onDrag: DraggableEventHandler = (e, data)=>{
     dispatch({type: 'drag-vertex', data, index})
   }
-
-  const hasEnter = isStartPoint || isEndPoint
-
-  let polarity = Polarity.BEFORE
-  if (isEndPoint) polarity = Polarity.AFTER
-  const angle = getAngle(point, polarity)
 
   return h("g.bezier-node", {
     className,
@@ -138,7 +101,7 @@ const BezierPoint = (props: BezierPointProps)=>{
   }, [
     h(DraggableCircle, {onDrag, className: 'bezier-point', r: 5}),
     h(BezierHandles, {point, index}),
-    h.if(hasEnter)(BezierEndpointControl, {angle, polarity})
+    h(BezierExtensionControl, {index})
   ])
 }
 
