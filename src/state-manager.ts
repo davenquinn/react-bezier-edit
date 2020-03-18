@@ -5,9 +5,12 @@ import {DraggableData} from 'react-draggable'
 import {Polarity, getAngle} from './helpers'
 
 interface ExtendModeData {
-  type: EditMode.EXTEND,
+  mode: 'extend',
   polarity: Polarity
 }
+
+type EditMode =
+  | ExtendModeData
 
 interface VertexAction {
   index: number
@@ -27,13 +30,34 @@ interface DragBezierVertex extends DragAction {
   type: "drag-vertex"
 }
 
+interface LayerMouseMove extends Point {
+  type: 'layer-move'
+}
+
+interface EnterExtendMode {
+  type: 'enter-extend-mode',
+  polarity: Polarity
+}
+
 type BezierEditAction =
   | DragBezierHandle
   | DragBezierVertex
+  | EnterExtendMode
+  | LayerMouseMove
+
+interface EditableBezierCurve extends BezierCurve {
+  editMode: EditMode|null,
+  proposedVertex: BezierPoint|null
+}
 
 type BezierReducer = (S: EditableBezierCurve, A: BezierEditAction)=> EditableBezierCurve
 
-const emptyCurve: EditableBezierCurve = {points: [], editMode: null}
+const emptyCurve: EditableBezierCurve = {
+  points: [],
+  editMode: null,
+  proposedVertex: null
+}
+
 const voidDispatch = (a: BezierEditAction)=> a
 const BezierCurveContext = createContext<EditableBezierCurve>(emptyCurve)
 const BezierDispatchContext = createContext<typeof voidDispatch>(voidDispatch)
@@ -71,7 +95,18 @@ const bezierReducer: BezierReducer = (curve, action)=>{
     case "drag-vertex":
       const {x, y} = action.data
       const {index} = action
-      return update(curve, {[index]: {x: {$set: x}, y: {$set: y}}})
+      return update(curve, {points: {[index]: {x: {$set: x}, y: {$set: y}}}})
+    case 'enter-extend-mode':
+      const {polarity} = action
+      return update(curve, {editMode: {$set: {mode: 'extend', polarity}}})
+    case 'layer-move':
+      if (curve.editMode?.mode != "extend") return curve
+      const vert = {
+        controlPoint: null,
+        x: action.x,
+        y: action.y
+      }
+      return update(curve, {proposedVertex: {$set: vert}})
   }
 }
 
@@ -82,7 +117,7 @@ interface BezierEditorProps {
 
 const BezierEditorProvider = (props: BezierEditorProps)=>{
   const {children, initialPoints} = props
-  const initialState: EditableBezierCurve = {points: initialPoints, editMode: null}
+  const initialState: EditableBezierCurve = {...emptyCurve, points: initialPoints}
   const [value, dispatch] = useReducer(bezierReducer, initialState)
   return h(BezierCurveContext.Provider, {value},
     h(BezierDispatchContext.Provider, {value: dispatch}, children)

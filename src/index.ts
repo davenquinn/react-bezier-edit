@@ -93,7 +93,10 @@ interface EndpointControlProps {
 const BezierEndpointControl = (props: EndpointControlProps)=>{
   const {angle, polarity} = props
   const cx = 20*polarity
-  const onClick = ()=>{}
+  const dispatch = useDispatch()
+  const onClick = ()=>{
+    dispatch({type: 'enter-extend-mode', polarity})
+  }
 
   const transform = rotate(angle)
 
@@ -149,6 +152,14 @@ const BezierPoints = ()=>{
   return h("g.points", points.map((point, index)=>h(BezierPoint, {point, index})))
 }
 
+const LayerBackground = (props)=>{
+  const dispatch = useDispatch()
+  const onMouseMove = (event: React.MouseEvent)=>{
+    dispatch({type: "layer-move", x: event.clientX, y: event.clientY})
+  }
+  return h("rect.layer-background", {width: 1000, height: 600, onMouseMove})
+}
+
 const BezierEditComponent = ()=>{
   const initialPoints = [
     {x: 100, y: 100, controlPoint: {angle: 0, length1: 200, length: null}},
@@ -157,6 +168,7 @@ const BezierEditComponent = ()=>{
   ]
   return h(BezierEditorProvider, {initialPoints}, [
     h("g.editable-bezier", [
+      h(LayerBackground),
       h(BezierPath),
       h(BezierPoints)
     ])
