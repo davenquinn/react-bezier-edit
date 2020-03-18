@@ -1,8 +1,9 @@
 import {hyperStyled} from '@macrostrat/hyper'
 import {
-  usePoints,
+  useBezier,
   useDispatch
 } from '../state-manager'
+import {generatePath} from '../path-data'
 import {Polarity, getAngle, rotate} from '../helpers'
 import styles from '../main.styl'
 
@@ -28,20 +29,47 @@ const ExtendPlaceholder = (props: EndpointControlProps)=>{
   ])
 }
 
+const ExtendedPath = (props: {point: BezierPoint, angle: number})=>{
+  const {point, angle} = props
+  const {proposedVertex} = useBezier()
+  if (proposedVertex == null) return null
+
+  let length = point.controlPoint?.length ?? point.controlPoint?.length1 ?? 0
+  const controlPoint = {length, angle, length1: null}
+  const p1: BezierPoint = {...point, controlPoint}
+  const p2 = {...proposedVertex, controlPoint: null}
+  const pathData = [p1,p2]
+  const p = generatePath(pathData)
+  console.log(p.toString())
+
+
+  return h('path', {
+    d: p.toString(),
+    stroke: "#888888",
+    fill: 'none',
+    strokeWidth: "2px",
+    strokeDasharray: "2 2"
+  })
+}
+
 type ExtProps = {index: number}
 const BezierExtensionControl = (props: ExtProps)=>{
   const {index} = props
-  const points = usePoints()
+  const {points, editMode} = useBezier()
+  const point = points[index]
+  const inExtendMode = editMode?.mode == "extend"
 
   const isStart = index == 0;
   const isEnd = index == points.length-1
-
   if (!isStart && !isEnd) return null
 
   const polarity = isStart ? Polarity.BEFORE : Polarity.AFTER
-  const angle = getAngle(points[index], polarity)
+  const angle = getAngle(point, polarity)
 
-  return h(ExtendPlaceholder, {angle, polarity})
+  return h([
+    h.if(!inExtendMode)(ExtendPlaceholder, {angle, polarity})
+    h.if(inExtendMode)(ExtendedPath, {point, angle})
+  ])
 }
 
 export {BezierExtensionControl}

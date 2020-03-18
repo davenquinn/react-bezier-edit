@@ -6,9 +6,7 @@ import {
 } from './helpers'
 import {usePoints} from './state-manager'
 
-const usePathGenerator = ()=>{
-  const points = usePoints()
-
+function generatePath(points: BezierPoint[]) {
   let p = path()
   p.moveTo(points[0].x, points[0].y)
 
@@ -29,4 +27,6 @@ const usePathGenerator = ()=>{
   return p
 }
 
-export {usePathGenerator}
+const usePathGenerator = ()=> generatePath(usePoints())
+
+export {generatePath, usePathGenerator}

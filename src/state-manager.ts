@@ -124,7 +124,8 @@ const BezierEditorProvider = (props: BezierEditorProps)=>{
   )
 }
 
+const useBezier = ()=> useContext(BezierCurveContext)
 const useDispatch = ()=> useContext(BezierDispatchContext)
-const usePoints = ()=>useContext(BezierCurveContext).points
+const usePoints = ()=> useBezier().points
 
-export {BezierEditorProvider, useDispatch, usePoints, Polarity}
+export {BezierEditorProvider, useDispatch, useBezier, usePoints, Polarity}
