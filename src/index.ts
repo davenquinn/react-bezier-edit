@@ -117,18 +117,23 @@ const BezierPoints = ()=>{
   return h("g.points", points.map((point, index)=>h(BezierPoint, {point, index})))
 }
 
-const LayerBackground = (props)=>{
+const LayerBackground = ()=>{
   const dispatch = useDispatch()
-  const {containerRef} = useBezierEditor()
+  const {containerRef, canvasSize} = useBezierEditor()
 
   const onMouseMove = (event: React.MouseEvent)=>{
     // Wow, this is horrible and non-performant, but it kinda-sorta works
     const {x,y} = containerRef?.current?.getBoundingClientRect() ?? {x: 0, y: 0}
-
-    const obj = {type: "layer-move", x: event.clientX-x, y: event.clientY-y}
-    dispatch(obj)
+    dispatch({type: "layer-move", x: event.clientX-x, y: event.clientY-y})
   }
-  return h("rect.layer-background", {width: 1000, height: 600, onMouseMove})
+
+  const onDrag: DraggableEventHandler = (event, data)=>{
+    dispatch({type: "layer-drag", data})
+  }
+
+  return h(DraggableCore, {onDrag},
+    h("rect.layer-background", {...canvasSize, onMouseMove})
+  )
 }
 
 const BezierEditComponent = ()=>{
@@ -137,7 +142,7 @@ const BezierEditComponent = ()=>{
     {x: 400, y: 400, controlPoint: {length: 200, angle: 0, length1: 200}},
     {x: 500, y: 300, controlPoint: {length: 200, angle: 0, length1: null}}
   ]
-  const canvasSize = {width: 100, height: 600}
+  const canvasSize = {width: 1000, height: 800}
 
   const containerRef = useRef<SVGElement|null>()
   useEffect(()=>{

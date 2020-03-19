@@ -16,22 +16,26 @@ interface VertexAction {
   index: number
 }
 
-interface DragAction extends VertexAction {
+interface DragAction {
   data: DraggableData
 }
 
 // Discriminated union actions
-interface DragBezierHandle extends DragAction {
+interface DragBezierHandle extends DragAction, VertexAction {
   type: "drag-handle",
   polarity: Polarity
 }
 
-interface DragBezierVertex extends DragAction {
+interface DragBezierVertex extends DragAction, VertexAction {
   type: "drag-vertex"
 }
 
 interface LayerMouseMove extends Point {
-  type: 'layer-move'
+  type: "layer-move"
+}
+
+interface CanvasDrag extends DragAction {
+  type: "layer-drag"
 }
 
 interface EnterExtendMode {
@@ -44,10 +48,15 @@ type BezierEditAction =
   | DragBezierVertex
   | EnterExtendMode
   | LayerMouseMove
+  | CanvasDrag
+
+interface ProposedVertex extends BezierPoint {
+  //index: number
+}
 
 interface EditableBezierCurve extends BezierCurve {
   editMode: EditMode|null,
-  proposedVertex: BezierPoint|null
+  proposedVertex: ProposedVertex|null
 }
 
 type BezierReducer = (S: EditableBezierCurve, A: BezierEditAction)=> EditableBezierCurve
@@ -100,13 +109,22 @@ const bezierReducer: BezierReducer = (curve, action)=>{
       const {polarity} = action
       return update(curve, {editMode: {$set: {mode: 'extend', polarity}}})
     case 'layer-move':
-      if (curve.editMode?.mode != "extend") return curve
+      if (curve.editMode?.mode != "extend"
+        || curve.proposedVertex?.controlPoint != null) return curve
       const vert = {
         controlPoint: null,
         x: action.x,
         y: action.y
       }
       return update(curve, {proposedVertex: {$set: vert}})
+    case "layer-drag":
+      if (curve.proposedVertex == null) return curve
+      const controlPoint = {
+        angle: 0,
+        length: 100,
+        length1: 100
+      }
+      return update(curve, {proposedVertex: {controlPoint: {$set: controlPoint}}})
   }
 }
 
