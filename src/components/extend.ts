@@ -40,7 +40,7 @@ const ExtendedPath = (props: {point: BezierPoint, angle: number})=>{
   const p2 = {
     x: proposedVertex.x-point.x,
     // Weird extra factor
-    y: proposedVertex.y-point.y-60,
+    y: proposedVertex.y-point.y,
     controlPoint: null
   }
   const pathData = [p1,p2]

@@ -3,9 +3,11 @@ import {DraggableCore, DraggableEventHandler} from 'react-draggable'
 import {
   BezierEditorProvider,
   usePoints,
-  useDispatch
+  useDispatch,
+  useBezierEditor
 } from './state-manager'
 import {usePathGenerator} from './path-data'
+import {useRef, useEffect} from 'react'
 import {expandControlPoint, Polarity, rotate, translate} from './helpers'
 import {BezierExtensionControl} from './components/extend'
 import styles from './main.styl'
@@ -117,8 +119,14 @@ const BezierPoints = ()=>{
 
 const LayerBackground = (props)=>{
   const dispatch = useDispatch()
+  const {containerRef} = useBezierEditor()
+
   const onMouseMove = (event: React.MouseEvent)=>{
-    dispatch({type: "layer-move", x: event.clientX, y: event.clientY})
+    // Wow, this is horrible and non-performant, but it kinda-sorta works
+    const {x,y} = containerRef?.current?.getBoundingClientRect() ?? {x: 0, y: 0}
+
+    const obj = {type: "layer-move", x: event.clientX-x, y: event.clientY-y}
+    dispatch(obj)
   }
   return h("rect.layer-background", {width: 1000, height: 600, onMouseMove})
 }
@@ -130,7 +138,14 @@ const BezierEditComponent = ()=>{
     {x: 500, y: 300, controlPoint: {length: 200, angle: 0, length1: null}}
   ]
   const canvasSize = {width: 100, height: 600}
-  return h(BezierEditorProvider, {initialPoints, canvasSize}, [
+
+  const containerRef = useRef<SVGElement|null>()
+  useEffect(()=>{
+    containerRef.current = document.querySelector("svg")
+  })
+
+
+  return h(BezierEditorProvider, {initialPoints, canvasSize, containerRef}, [
     h("g.editable-bezier", [
       h(LayerBackground),
       h(BezierPath),

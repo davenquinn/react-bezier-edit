@@ -14,7 +14,7 @@ const UserInterface = (props)=>{
   const width = 1000
   const height = 800
   return h(SVGComponent, {width, height}, [
-    h('rect', {x: 50, y: 50, height: height-100, width: width-100, fill: '#eeeeee'}),
+    h('rect', {x: 0, y: 0, height, width, fill: '#eeeeee'}),
     h(BezierEditComponent)
   ])
 }
