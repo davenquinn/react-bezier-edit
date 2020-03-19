@@ -118,7 +118,6 @@ const BezierPoints = ()=>{
 const LayerBackground = (props)=>{
   const dispatch = useDispatch()
   const onMouseMove = (event: React.MouseEvent)=>{
-    console.log(event.clientX, event.clentY)
     dispatch({type: "layer-move", x: event.clientX, y: event.clientY})
   }
   return h("rect.layer-background", {width: 1000, height: 600, onMouseMove})
@@ -130,7 +129,8 @@ const BezierEditComponent = ()=>{
     {x: 400, y: 400, controlPoint: {length: 200, angle: 0, length1: 200}},
     {x: 500, y: 300, controlPoint: {length: 200, angle: 0, length1: null}}
   ]
-  return h(BezierEditorProvider, {initialPoints}, [
+  const canvasSize = {width: 100, height: 600}
+  return h(BezierEditorProvider, {initialPoints, canvasSize}, [
     h("g.editable-bezier", [
       h(LayerBackground),
       h(BezierPath),

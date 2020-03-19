@@ -34,8 +34,8 @@ const ExtendedPath = (props: {point: BezierPoint, angle: number})=>{
   const {proposedVertex} = useBezier()
   if (proposedVertex == null) return null
 
-  let length = point.controlPoint?.length ?? point.controlPoint?.length1 ?? 0
-  const controlPoint = {length, angle, length1: null}
+  let length = point.controlPoint?.length ?? -point.controlPoint?.length1 ?? 0
+  const controlPoint = {length, angle, length1: length}
   const p1: BezierPoint = {x:0, y: 0, controlPoint}
   const p2 = {
     x: proposedVertex.x-point.x,

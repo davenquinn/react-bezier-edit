@@ -110,22 +110,44 @@ const bezierReducer: BezierReducer = (curve, action)=>{
   }
 }
 
+interface Size {
+  width: number,
+  height: number
+}
+
 interface BezierEditorProps {
   initialPoints: BezierPoint[],
+  canvasSize: Size
   children?: React.ReactChildren
 }
 
+interface BezierEditorCtx {
+  canvasSize: Size
+}
+
+const BezierEditorContext = createContext<Partial<BezierEditorCtx>>({})
+
 const BezierEditorProvider = (props: BezierEditorProps)=>{
-  const {children, initialPoints} = props
+  const {children, initialPoints, canvasSize} = props
   const initialState: EditableBezierCurve = {...emptyCurve, points: initialPoints}
   const [value, dispatch] = useReducer(bezierReducer, initialState)
-  return h(BezierCurveContext.Provider, {value},
-    h(BezierDispatchContext.Provider, {value: dispatch}, children)
+  return h(BezierEditorContext.Provider, {value: {canvasSize}},
+    h(BezierCurveContext.Provider, {value},
+      h(BezierDispatchContext.Provider, {value: dispatch}, children)
+    )
   )
 }
 
 const useBezier = ()=> useContext(BezierCurveContext)
 const useDispatch = ()=> useContext(BezierDispatchContext)
 const usePoints = ()=> useBezier().points
+const useCanvasSize = ()=> useContext(BezierEditorContext).canvasSize
 
-export {BezierEditorProvider, useDispatch, useBezier, usePoints, Polarity}
+export {
+  BezierEditorProvider,
+  useDispatch,
+  useBezier,
+  usePoints,
+  useCanvasSize,
+  Polarity
+}
