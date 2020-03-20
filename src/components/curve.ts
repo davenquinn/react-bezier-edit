@@ -71,20 +71,18 @@ const BezierHandles = (props: BezierHandlesProps)=>{
 }
 
 interface BezierPointProps {
-  point: BezierPoint,
-  index: number
+  point: BezierPoint
 }
 
 const BezierPoint = (props: BezierPointProps)=>{
-  const {index} = props
+  const {point} = props
   const editable = true
   const className = editable ? "editable" : null
-
-  const points = usePoints()
-  const point = points[index]
+  const index = usePoints().findIndex(d => point == d)
   const dispatch = useDispatch()
 
   const onDrag: DraggableEventHandler = (e, data)=>{
+    if (index == -1) return false
     dispatch({type: 'drag-vertex', data, index})
   }
 
@@ -130,4 +128,9 @@ const BezierCurve = (props: BezierCurveProps)=>{
   ])
 }
 
-export {BezierPoints, BezierPath, BezierCurve}
+export {
+  BezierPoints,
+  BezierPath,
+  BezierCurve,
+  BezierCurveProps
+}

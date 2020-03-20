@@ -31,7 +31,7 @@ const ExtendPlaceholder = (props: EndpointControlProps)=>{
 }
 
 const ExtendedPath = ()=>{
-  const {points, editMode} = useBezier()
+  const {points, editMode, proposedVertex} = useBezier()
   const inExtendMode = editMode?.mode == "extend"
   if (!inExtendMode) return null
   if (editMode?.polarity == null) return null
@@ -40,24 +40,13 @@ const ExtendedPath = ()=>{
   const point = points[index]
   const angle = getAngle(point, polarity)
 
-  const {proposedVertex} = useBezier()
   if (proposedVertex == null) return null
 
   let length = point.controlPoint?.length ?? -(point.controlPoint?.length1 ?? 0)
   const controlPoint = {length, angle, length1: length}
   const p1: BezierPoint = {...point, controlPoint}
-  const p2 = {
-    x: proposedVertex.x,
-    y: proposedVertex.y,
-    controlPoint: null
-  }
-  const pathData = [p1,p2]
-  console.log(pathData)
-
-  const p = generatePath(pathData)
-  console.log(p.toString())
-
-  return h(BezierCurve, {points: [p1, p2]})
+  const p2 = proposedVertex
+  return h(BezierCurve, {className: "extended", points: [p1, p2]})
 }
 
 type ExtProps = {index: number}
