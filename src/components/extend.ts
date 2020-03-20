@@ -3,7 +3,7 @@ import {
   useBezier,
   useDispatch
 } from '../state-manager'
-import {Polarity, getAngle, rotate, opposite} from '../helpers'
+import {Polarity, getAngle, rotate, opposite, isSmooth} from '../helpers'
 import {BezierCurve} from './curve'
 import styles from '../main.styl'
 
@@ -27,10 +27,6 @@ const ExtendPlaceholder = (props: EndpointControlProps)=>{
   return h("g.endpoint-control", {transform}, [
     h("circle.enter-edit-mode", {cx, r: 5, onClick})
   ])
-}
-
-function isSmooth(ctl: BezierVertexControls): ctl is SmoothControlPoint {
-  return (ctl as SmoothControlPoint).angle != null ? true : false
 }
 
 const ExtendedPath = ()=>{

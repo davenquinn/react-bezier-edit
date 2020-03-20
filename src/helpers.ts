@@ -50,6 +50,10 @@ function translate(point: Point) {
   return `translate(${point.x} ${point.y})`
 }
 
+function isSmooth(ctl: BezierVertexControls): ctl is SmoothControlPoint {
+  return (ctl as SmoothControlPoint).angle != null ? true : false
+}
+
 export {
   Polarity,
   expandControlPoint,
@@ -57,5 +61,6 @@ export {
   pixelShift,
   rotate,
   translate,
-  opposite
+  opposite,
+  isSmooth
 }

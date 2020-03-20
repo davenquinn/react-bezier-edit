@@ -27,7 +27,11 @@ const LayerBackground = ()=>{
     dispatch({type: "layer-drag", data})
   }
 
-  return h(Draggable, {onDrag},
+  const onStop: DraggableEventHandler = (event, data)=>{
+    dispatch({type: "layer-drag-stop", data})
+  }
+
+  return h(Draggable, {onDrag, onStop},
     h("rect.layer-background", {...canvasSize, onMouseMove})
   )
 }

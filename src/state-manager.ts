@@ -2,7 +2,7 @@ import h from '@macrostrat/hyper'
 import {useReducer, useContext, createContext} from 'react'
 import update, {Spec} from 'immutability-helper'
 import {DraggableData} from 'react-draggable'
-import {Polarity, getAngle} from './helpers'
+import {Polarity, getAngle, isSmooth} from './helpers'
 
 interface ExtendModeData {
   mode: 'extend',
@@ -38,6 +38,10 @@ interface LayerDrag extends DragAction {
   type: "layer-drag"
 }
 
+interface LayerDragStop extends DragAction {
+  type: "layer-drag-stop"
+}
+
 interface EnterExtendMode {
   type: 'enter-extend-mode',
   polarity: Polarity
@@ -49,6 +53,7 @@ type BezierEditAction =
   | EnterExtendMode
   | LayerMouseMove
   | LayerDrag
+  | LayerDragStop
 
 interface ProposedVertex extends BezierPoint {
   //index: number
@@ -121,11 +126,15 @@ function updateControlPoint(curve: EditableBezierCurve, action: DragBezierHandle
   return update(curve, {points: {[index]: {controlPoint: spec}}})
 }
 
-function layerDragReducer(curve: EditableBezierCurve, action: LayerDrag): EditableBezierCurve {
+function layerDragReducer(
+    curve: EditableBezierCurve,
+    action: LayerDrag|LayerDragStop): EditableBezierCurve {
   if (curve.proposedVertex == null) return curve
   const controlPoint = createControlPoint(curve.proposedVertex, action.data)
   return update(curve, {proposedVertex: {controlPoint: {$set: controlPoint}}})
 }
+
+type ArrayOperation = "$unshift" | "$push"
 
 const bezierReducer: BezierReducer = (curve, action)=>{
   switch (action.type) {
@@ -149,6 +158,27 @@ const bezierReducer: BezierReducer = (curve, action)=>{
       return update(curve, {proposedVertex: {$set: vert}})
     case "layer-drag":
       return layerDragReducer(curve, action)
+    case "layer-drag-stop": {
+      const {editMode} = curve
+      if (editMode?.mode != 'extend') return curve
+      curve = layerDragReducer(curve, action)
+      if (curve.proposedVertex == null) return curve
+
+      let vtx = (curve.proposedVertex as BezierPoint)
+      const op: ArrayOperation = editMode.polarity == Polarity.BEFORE ? "$unshift": "$push"
+      let points: any = {}
+
+      // Forward-looking dragging is more natural
+      if (vtx.controlPoint != null && isSmooth(vtx.controlPoint)) {
+        vtx.controlPoint.angle = vtx.controlPoint.angle-180
+      }
+      //if (vtx.controlPoint != null) vtx.controlPoint.angle = -angle
+      points[op] = [vtx]
+      return update(curve, {
+        proposedVertex: {$set: null},
+        points
+      })
+    }
   }
 }
 
