@@ -6,6 +6,7 @@ import {
   useBezierEditor
 } from './state-manager'
 import {useRef, useEffect} from 'react'
+import {ExtendedPath} from './components/extend'
 import {BezierCurve} from './components/curve'
 import styles from './main.styl'
 
@@ -43,11 +44,17 @@ const BezierEditComponent = ()=>{
     containerRef.current = document.querySelector("svg")
   })
 
+  const EditableBezierCurve = ()=>{
+    return h(BezierCurve, [
+      h(ExtendedPath)
+    ])
+  }
+
 
   return h(BezierEditorProvider, {initialPoints, canvasSize, containerRef}, [
     h("g.editable-bezier", [
       h(LayerBackground),
-      h(BezierCurve)
+      h(EditableBezierCurve)
     ])
   ])
 }

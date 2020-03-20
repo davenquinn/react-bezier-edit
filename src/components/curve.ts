@@ -122,8 +122,9 @@ const BezierPath = (props: BezierCurveProps)=>{
 }
 
 const BezierCurve = (props: BezierCurveProps)=>{
-  const {points, ...rest} = props
+  const {points, children, ...rest} = props
   return h("g.bezier-curve", {...rest}, [
+    children,
     h(BezierPath, {points}),
     h(BezierPoints, {points})
   ])

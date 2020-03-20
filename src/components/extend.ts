@@ -5,6 +5,7 @@ import {
 } from '../state-manager'
 import {generatePath} from '../path-data'
 import {Polarity, getAngle, rotate} from '../helpers'
+import {BezierCurve} from './curve'
 import styles from '../main.styl'
 
 const h = hyperStyled(styles)
@@ -29,18 +30,25 @@ const ExtendPlaceholder = (props: EndpointControlProps)=>{
   ])
 }
 
-const ExtendedPath = (props: {point: BezierPoint, angle: number})=>{
-  const {point, angle} = props
+const ExtendedPath = ()=>{
+  const {points, editMode} = useBezier()
+  const inExtendMode = editMode?.mode == "extend"
+  if (!inExtendMode) return null
+  if (editMode?.polarity == null) return null
+  const {polarity} = editMode
+  const index = polarity == Polarity.BEFORE ? 0 : points.length-1
+  const point = points[index]
+  const angle = getAngle(point, polarity)
+
   const {proposedVertex} = useBezier()
   if (proposedVertex == null) return null
 
-  let length = point.controlPoint?.length ?? -point.controlPoint?.length1 ?? 0
+  let length = point.controlPoint?.length ?? -(point.controlPoint?.length1 ?? 0)
   const controlPoint = {length, angle, length1: length}
-  const p1: BezierPoint = {x:0, y: 0, controlPoint}
+  const p1: BezierPoint = {...point, controlPoint}
   const p2 = {
-    x: proposedVertex.x-point.x,
-    // Weird extra factor
-    y: proposedVertex.y-point.y,
+    x: proposedVertex.x,
+    y: proposedVertex.y,
     controlPoint: null
   }
   const pathData = [p1,p2]
@@ -49,14 +57,7 @@ const ExtendedPath = (props: {point: BezierPoint, angle: number})=>{
   const p = generatePath(pathData)
   console.log(p.toString())
 
-
-  return h('path', {
-    d: p.toString(),
-    stroke: "#888888",
-    fill: 'none',
-    strokeWidth: "2px",
-    strokeDasharray: "2 2"
-  })
+  return h(BezierCurve, {points: [p1, p2]})
 }
 
 type ExtProps = {index: number}
@@ -65,6 +66,7 @@ const BezierExtensionControl = (props: ExtProps)=>{
   const {points, editMode} = useBezier()
   const point = points[index]
   const inExtendMode = editMode?.mode == "extend"
+  if (inExtendMode) return null
 
   const isStart = index == 0;
   const isEnd = index == points.length-1
@@ -73,12 +75,7 @@ const BezierExtensionControl = (props: ExtProps)=>{
   const polarity = isStart ? Polarity.BEFORE : Polarity.AFTER
   const angle = getAngle(point, polarity)
 
-  const activeExtendMode = editMode?.polarity == polarity
-
-  return h([
-    h.if(!inExtendMode)(ExtendPlaceholder, {angle, polarity})
-    h.if(inExtendMode && activeExtendMode)(ExtendedPath, {point, angle})
-  ])
+  return h(ExtendPlaceholder, {angle, polarity})
 }
 
-export {BezierExtensionControl}
+export {BezierExtensionControl, ExtendedPath}
