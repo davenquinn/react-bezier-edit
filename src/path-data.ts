@@ -4,7 +4,6 @@ import {
   pixelShift,
   expandControlPoint
 } from './helpers'
-import {usePoints} from './state-manager'
 
 function generatePath(points: BezierPoint[]) {
   let p = path()
@@ -27,6 +26,4 @@ function generatePath(points: BezierPoint[]) {
   return p
 }
 
-const usePathGenerator = ()=> generatePath(usePoints())
-
-export {generatePath, usePathGenerator}
+export {generatePath}
