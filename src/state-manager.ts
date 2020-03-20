@@ -166,17 +166,23 @@ const bezierReducer: BezierReducer = (curve, action)=>{
 
       let vtx = (curve.proposedVertex as BezierPoint)
       const op: ArrayOperation = editMode.polarity == Polarity.BEFORE ? "$unshift": "$push"
-      let points: any = {}
+      let pointsSpec: Spec<BezierPoint[]> = {}
+
+      // HACK: make sure that extending point has a control point length in both directions
+      const extIx = editMode.polarity == Polarity.BEFORE ? 0 : curve.points.length-1
+      const pt = curve.points[extIx];
+      const len = pt.controlPoint?.length ?? pt.controlPoint?.length1 ?? 0
+
+      pointsSpec[extIx] = {controlPoint: {length: {$set: len}, length1: {$set: len}}}
 
       // Forward-looking dragging is more natural
       if (vtx.controlPoint != null && isSmooth(vtx.controlPoint)) {
         vtx.controlPoint.angle = vtx.controlPoint.angle-180
       }
-      //if (vtx.controlPoint != null) vtx.controlPoint.angle = -angle
-      points[op] = [vtx]
+      pointsSpec[op] = [vtx]
       return update(curve, {
         proposedVertex: {$set: null},
-        points
+        points: pointsSpec
       })
     }
   }
