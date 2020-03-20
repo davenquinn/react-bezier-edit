@@ -3,6 +3,10 @@ enum Polarity {
   AFTER = 1
 }
 
+function opposite(polarity: Polarity): Polarity {
+  return polarity == Polarity.BEFORE ? Polarity.AFTER : Polarity.BEFORE
+}
+
 // Helpers
 function expandControlPoint(cp: BezierVertexControls): InflectionControlPoint {
   if (cp == null) return [null, null];
@@ -46,4 +50,12 @@ function translate(point: Point) {
   return `translate(${point.x} ${point.y})`
 }
 
-export {Polarity, expandControlPoint, getAngle, pixelShift, rotate, translate}
+export {
+  Polarity,
+  expandControlPoint,
+  getAngle,
+  pixelShift,
+  rotate,
+  translate,
+  opposite
+}

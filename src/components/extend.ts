@@ -3,8 +3,7 @@ import {
   useBezier,
   useDispatch
 } from '../state-manager'
-import {generatePath} from '../path-data'
-import {Polarity, getAngle, rotate} from '../helpers'
+import {Polarity, getAngle, rotate, opposite} from '../helpers'
 import {BezierCurve} from './curve'
 import styles from '../main.styl'
 
@@ -30,6 +29,10 @@ const ExtendPlaceholder = (props: EndpointControlProps)=>{
   ])
 }
 
+function isSmooth(ctl: BezierVertexControls): ctl is SmoothControlPoint {
+  return (ctl as SmoothControlPoint).angle != null ? true : false
+}
+
 const ExtendedPath = ()=>{
   const {points, editMode, proposedVertex} = useBezier()
   const inExtendMode = editMode?.mode == "extend"
@@ -45,7 +48,11 @@ const ExtendedPath = ()=>{
   let length = point.controlPoint?.length ?? -(point.controlPoint?.length1 ?? 0)
   const controlPoint = {length, angle, length1: length}
   const p1: BezierPoint = {...point, controlPoint}
-  const p2 = proposedVertex
+  let p2 = proposedVertex
+  // Forward-looking dragging is more natural
+  if (p2.controlPoint != null && isSmooth(p2.controlPoint)) {
+    p2.controlPoint.angle = p2.controlPoint.angle-180
+  }
   return h(BezierCurve, {className: "extended", points: [p1, p2]})
 }
 
@@ -62,7 +69,7 @@ const BezierExtensionControl = (props: ExtProps)=>{
   if (!isStart && !isEnd) return null
 
   const polarity = isStart ? Polarity.BEFORE : Polarity.AFTER
-  const angle = getAngle(point, polarity)
+  const angle = getAngle(point, opposite(polarity))
 
   return h(ExtendPlaceholder, {angle, polarity})
 }

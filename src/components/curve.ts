@@ -1,9 +1,10 @@
 import {hyperStyled} from '@macrostrat/hyper'
-import {DraggableCore, DraggableEventHandler} from 'react-draggable'
+import {DraggableEventHandler} from 'react-draggable'
 import {
   usePoints,
   useDispatch,
 } from '../state-manager'
+import {Draggable} from './drag'
 import {generatePath} from '../path-data'
 import {expandControlPoint, Polarity, rotate, translate} from '../helpers'
 import {BezierExtensionControl} from './extend'
@@ -17,7 +18,7 @@ interface DragCircleProps extends Omit<React.SVGProps<SVGElement>,"onDrag"> {
 
 const DraggableCircle = (props: DragCircleProps)=>{
   const {onDrag, ...rest} = props
-  return h(DraggableCore, {
+  return h(Draggable, {
     onDrag,
     offsetParent: document.querySelector("svg")
   }, (

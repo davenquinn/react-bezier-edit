@@ -1,11 +1,12 @@
 import {hyperStyled} from '@macrostrat/hyper'
-import {DraggableCore, DraggableEventHandler} from 'react-draggable'
+import {DraggableEventHandler} from 'react-draggable'
 import {
   BezierEditorProvider,
   useDispatch,
   useBezierEditor
 } from './state-manager'
 import {useRef, useEffect} from 'react'
+import {Draggable} from './components/drag'
 import {ExtendedPath} from './components/extend'
 import {BezierCurve} from './components/curve'
 import styles from './main.styl'
@@ -26,7 +27,7 @@ const LayerBackground = ()=>{
     dispatch({type: "layer-drag", data})
   }
 
-  return h(DraggableCore, {onDrag},
+  return h(Draggable, {onDrag},
     h("rect.layer-background", {...canvasSize, onMouseMove})
   )
 }

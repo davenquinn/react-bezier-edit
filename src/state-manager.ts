@@ -34,7 +34,7 @@ interface LayerMouseMove extends Point {
   type: "layer-move"
 }
 
-interface CanvasDrag extends DragAction {
+interface LayerDrag extends DragAction {
   type: "layer-drag"
 }
 
@@ -48,7 +48,7 @@ type BezierEditAction =
   | DragBezierVertex
   | EnterExtendMode
   | LayerMouseMove
-  | CanvasDrag
+  | LayerDrag
 
 interface ProposedVertex extends BezierPoint {
   //index: number
@@ -70,6 +70,30 @@ const emptyCurve: EditableBezierCurve = {
 const voidDispatch = (a: BezierEditAction)=> a
 const BezierCurveContext = createContext<EditableBezierCurve>(emptyCurve)
 const BezierDispatchContext = createContext<typeof voidDispatch>(voidDispatch)
+
+function createControlPoint(
+    point: BezierPoint,
+    control: Point,
+    polarity: Polarity = Polarity.AFTER):BezierVertexControls {
+  const {x, y} = control
+  const dx = x-point.x
+  const dy = y-point.y
+  console.log(x,y,dx,dy, point.x,point.y)
+  const length = Math.hypot(dx,dy)
+  // Don't change angle if control arm is too short
+  let angle = getAngle(point, polarity)
+  if (length > 5) {
+    angle = Math.atan2(dy,dx)*180/Math.PI-180
+  }
+  if (Array.isArray(point.controlPoint)) {
+    // disconnected endpoints not handled yet
+  }
+  return {
+    angle,
+    length,
+    length1: length
+  }
+}
 
 function updateControlPoint(curve: EditableBezierCurve, action: DragBezierHandle) {
   const {x, y} = action.data
@@ -97,6 +121,12 @@ function updateControlPoint(curve: EditableBezierCurve, action: DragBezierHandle
   return update(curve, {points: {[index]: {controlPoint: spec}}})
 }
 
+function layerDragReducer(curve: EditableBezierCurve, action: LayerDrag): EditableBezierCurve {
+  if (curve.proposedVertex == null) return curve
+  const controlPoint = createControlPoint(curve.proposedVertex, action.data)
+  return update(curve, {proposedVertex: {controlPoint: {$set: controlPoint}}})
+}
+
 const bezierReducer: BezierReducer = (curve, action)=>{
   switch (action.type) {
     case "drag-handle":
@@ -118,13 +148,7 @@ const bezierReducer: BezierReducer = (curve, action)=>{
       }
       return update(curve, {proposedVertex: {$set: vert}})
     case "layer-drag":
-      if (curve.proposedVertex == null) return curve
-      const controlPoint = {
-        angle: 0,
-        length: 100,
-        length1: 100
-      }
-      return update(curve, {proposedVertex: {controlPoint: {$set: controlPoint}}})
+      return layerDragReducer(curve, action)
   }
 }
 
