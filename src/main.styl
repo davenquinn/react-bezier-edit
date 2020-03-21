@@ -1,0 +1,47 @@
+.bezier-control-point
+  fill: dodgerblue
+  stroke: darken(dodgerblue, 20%)
+  stroke-width 2
+
+.bezier-control-arm
+  stroke dodgerblue
+  stroke-width 2px
+
+.bezier-point,.bezier-handle
+  fill: dodgerblue
+  stroke: darken(dodgerblue, 20%)
+  stroke-width 2px
+
+.bezier-node
+  circle.draggable
+    cursor pointer
+
+  circle.enter-edit-mode
+    cursor pointer
+    stroke: darken(dodgerblue, 20%)
+    stroke-dasharray: 2,2
+    fill transparent
+
+.extended-path
+  stroke: darken(dodgerblue, 20%)
+  stroke-dasharray: 2,2
+  fill transparent
+
+.layer-background
+  fill transparent
+
+.bezier-path
+  stroke: #888888
+  fill: none
+  stroke-width: 2px
+
+.bezier-curve.extended
+  .bezier-path
+    stroke-dasharray: 2 2
+    stroke: red
+  .bezier-node circle
+    pointer-events none
+    fill: lighten(red, 30%)
+    stroke: red
+  .bezier-control-arm
+    stroke red

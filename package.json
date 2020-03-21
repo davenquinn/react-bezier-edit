@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "parcel docs/index.html"
+    "dev": "parcel docs/index.html"
   },
   "repository": {
     "type": "git",
@@ -20,17 +20,26 @@
     "url": "https://github.com/davenquinn/react-bezier-edit/issues"
   },
   "homepage": "https://github.com/davenquinn/react-bezier-edit#readme",
-  "peerDependencies": {
-    "parcel-bundler": "^1.11.0"
-  },
   "devDependencies": {
     "coffeescript": "^2.3.2",
-    "stylus": "^0.54.5"
+    "parcel-bundler": "^1.12.4",
+    "postcss-modules": "^1.5.0",
+    "stylus": "^0.54.5",
+    "typescript": "^3.8.3"
   },
   "dependencies": {
+    "@macrostrat/hyper": "^1.2.3",
+    "@types/bezier-js": "0.0.8",
+    "@types/d3-array": "^2.0.0",
+    "@types/d3-path": "^1.0.8",
+    "@types/react": "^16.9.23",
+    "bezier-js": "^2.5.1",
+    "d3-array": "^2.4.0",
     "d3-path": "^1.0.7",
-    "react": "^16.7.0",
-    "react-dom": "^16.7.0",
+    "immutability-helper": "^3.0.1",
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0",
+    "react-draggable": "^4.2.0",
     "react-hyperscript": "^3.2.0"
   }
 }
